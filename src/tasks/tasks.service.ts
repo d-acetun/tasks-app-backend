@@ -4,10 +4,15 @@ import { Task } from './tasks.entity';
 import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/createTask.dto';
 import { UpdateTaskDto } from './dto/updateTask.dto';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task) private taskRepository: Repository<Task>,
+    @InjectDataSource()
+    private dataSource: DataSource,
   ) {}
 
   createTask(task: CreateTaskDto) {
@@ -16,24 +21,24 @@ export class TasksService {
   }
 
   getAllTasks() {
-    return this.taskRepository.find();
-    //* seleccionar campos return this.taskRepository.find({ select: ['title'] }); 
+    return this.dataSource.query('SELECT * FROM tasks');
   }
 
   async getTaskById(id: number): Promise<Task | null> {
-    return this.taskRepository.findOne({
-      where: { id },
-      // select: ['title', 'done'],
-    });
+    const tasks = await this.dataSource.query(
+      `SELECT * FROM tasks WHERE id = ${id}`,
+    );
+    return tasks[0] || null;
   }
 
   updateTask(id: number, newValues: UpdateTaskDto) {
-    return this.taskRepository.update(id, newValues);
+    const { title, description, done } = newValues;
+    return this.dataSource.query(
+      `UPDATE tasks SET title = '${title}', description = '${description}', done = ${done} WHERE id = ${id}`,
+    );
   }
 
   deleteTask(id: number) {
-    return this.taskRepository.delete({
-      id,
-    });
+    return this.dataSource.query(`DELETE FROM tasks WHERE id = ${id}`);
   }
 }

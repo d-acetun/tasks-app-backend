@@ -57,7 +57,6 @@ export class TasksController {
     if (!task) {
       return new HttpException('Task does not exist', HttpStatus.NOT_FOUND);
     }
-
     return this.tasksService.deleteTask(id);
   }
 }
