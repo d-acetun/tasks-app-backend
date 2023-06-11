@@ -16,8 +16,12 @@ export class TasksService {
   ) {}
 
   createTask(task: CreateTaskDto) {
-    const newTask = this.taskRepository.create(task);
-    return this.taskRepository.save(newTask);
+    // const newTask = this.taskRepository.create(task);
+    // return this.taskRepository.save(newTask);
+    const { title, description } = task;
+    return this.dataSource.query(
+      `INSERT INTO tasks (title, description) VALUES ('${title}', '${description}')`,
+    );
   }
 
   getAllTasks() {
@@ -33,9 +37,13 @@ export class TasksService {
 
   updateTask(id: number, newValues: UpdateTaskDto) {
     const { title, description, done } = newValues;
-    return this.dataSource.query(
-      `UPDATE tasks SET title = '${title}', description = '${description}', done = ${done} WHERE id = ${id}`,
-    );
+    let query = '';
+    if (done) {
+      query = `UPDATE tasks SET done = ${done} WHERE id = ${id}`;
+    } else {
+      query = `UPDATE tasks SET title = '${title}', description = '${description}' WHERE id = ${id}`;
+    }
+    return this.dataSource.query(query);
   }
 
   deleteTask(id: number) {
